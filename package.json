@@ -1,0 +1,57 @@
+{
+  "name": "@admigos/sdk-web",
+  "version": "1.0.0",
+  "description": "Web SDK for Ad-API: playable ad views, event tracking, and click handling",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/admigos-platform/sdk-web.git"
+  },
+  "homepage": "https://github.com/admigos-platform/sdk-web#readme",
+  "bugs": {
+    "url": "https://github.com/admigos-platform/sdk-web/issues"
+  },
+  "keywords": [
+    "ads",
+    "advertising",
+    "playable-ads",
+    "sdk",
+    "tracking",
+    "consent"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.0"
+  }
+}

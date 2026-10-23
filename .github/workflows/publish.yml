@@ -1,0 +1,58 @@
+# PUBLISH workflow for the PUBLIC admigos-platform/sdk-web repo. Runs on GitHub-hosted `ubuntu-latest` (free for public repositories).
+# Exported from the Ad-API source repository: do not edit here, the template there is the source of truth.
+#
+# TRIGGER: pushing a tag `v<version>` (the tag must equal the version in package.json, checked below). The job runs in the
+# `npm-publish` GitHub environment: configure that environment with the founder as REQUIRED REVIEWER, so no publish runs without
+# the founder's explicit approval click.
+#
+# NO LONG-LIVED TOKEN. This uses npm TRUSTED PUBLISHING (OIDC): the job gets `id-token: write`, npm verifies the workflow identity
+# against the "trusted publisher" configured on the package, and issues a short-lived credential. Provenance is attached
+# automatically and points at THIS public repo. No NPM_TOKEN secret exists or is read.
+#
+# ONE-TIME SETUP (founder), in order:
+#   1. GitHub: create the org `admigos-platform`, create the PUBLIC repo `sdk-web` in it, push the exported tree.
+#   2. GitHub: in the repo, Settings > Environments > New environment `npm-publish`, add yourself as required reviewer.
+#   3. npm: enable 2FA on the `admigos` org and on your account (require 2FA for publishing).
+#   4. npm: the package page > Settings > Trusted Publisher > GitHub Actions: organization `admigos-platform`,
+#      repository `sdk-web`, workflow filename `publish.yml`, environment `npm-publish`.
+#      If npm will not let you configure a trusted publisher for a package that does not exist yet, publish the very first version
+#      by hand from your machine (`npm publish --access public`, with 2FA), then configure the trusted publisher and use this workflow for every later version.
+#      (Verify against npm's current trusted-publishing docs before relying on either path.)
+#
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC) + provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Use an npm that supports trusted publishing (>= 11.5.1)
+        run: npm install -g npm@^11.5.1 && npm --version
+      - name: Tag must match package.json version
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "tag $GITHUB_REF_NAME does not match package.json version ($expected)"; exit 1
+          fi
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - name: Dry-run the package contents
+        run: npm pack --dry-run
+      - name: Publish (OIDC, provenance)
+        run: npm publish --access public --provenance

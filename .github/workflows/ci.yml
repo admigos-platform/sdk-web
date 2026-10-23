@@ -1,0 +1,26 @@
+# CI for the PUBLIC admigos-platform/sdk-web repo. Runs on GitHub-hosted `ubuntu-latest` (free for public repositories). Exported from the Ad-API source repository: do not edit here, the
+# template there is the source of truth and this tree is re-exported from it.
+#
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - name: Dry-run the package contents
+        run: npm pack --dry-run
